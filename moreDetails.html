@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,23 +8,43 @@
 
 <body>
 
-    <h2>Previous Details</h2>
+    <h1>Validate Your Details</h1>
 
-    <p id="details"></p>
+    <div id="storedDetails">
+        <p id="details"></p>
 
-    <br><br>
+        <button onclick="validateDetails()">Validate</button>
+    </div>
 
-    Why would we hire you:
-    <input type="text" id="hireReason">
 
-    <br><br>
+    <!-- This will appear after validation -->
 
-    <button onclick="submitDetails()">Submit</button>
+    <div id="validatedData" style="display: none;">
 
-    <p id="submitted"></p>
+        <h2>Validated Details</h2>
+
+        <p>Name: <span id="finalName"></span></p>
+
+        <p>Age: <span id="finalAge"></span></p>
+
+        <p>Account Number: <span id="finalAccNo"></span></p>
+
+        <br>
+
+        <label for="hireReason">
+            Why would we hire you?
+        </label>
+
+        <input type="text" id="hireReason">
+
+        <br><br>
+
+        <button>Submit</button>
+
+    </div>
+
 
     <script src="script.js"></script>
 
 </body>
-
 </html>
