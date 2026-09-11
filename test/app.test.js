@@ -1,42 +1,53 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const request = require("supertest");
+const session = require("express-session");
 const { createApp } = require("../server");
 
-function testApp() {
-  const rows = [];
-  const Application = {
-    async create(data) {
-      const row = { ...data, _id: String(rows.length + 1), hireReason: "", createdAt: new Date() };
-      rows.push(row);
-      return row;
-    },
-    async findOneAndUpdate(query, update) {
-      const row = rows.find(item => item.shareToken === query.shareToken);
-      if (row) Object.assign(row, update);
-      return row || null;
-    },
-    findOne(query) {
-      return { lean: async () => rows.find(item => item.shareToken === query.shareToken) || null };
-    }
+function buildTestApp() {
+  const users = [];
+  const User = {
+    async exists({ email }) { return users.some(user => user.email === email); },
+    async create(data) { const user = { ...data, _id: String(users.length + 1), hireReason: "" }; users.push(user); return user; },
+    findOne({ email }) { return { select: async () => users.find(user => user.email === email) || null }; },
+    findById(id) { return { lean: async () => users.find(user => user._id === id) || null }; },
+    findByIdAndUpdate(id, update) { return { lean: async () => { const user = users.find(item => item._id === id); if (user) Object.assign(user, update); return user || null; } }; }
   };
-  return createApp({ Application, connectDatabase: async () => {} });
+  return createApp({ User, connectDatabase: async () => {}, sessionStore: new session.MemoryStore() });
 }
 
-test("creates a share token and retrieves the complete dummy number", async () => {
-  const app = testApp();
-  const created = await request(app).post("/api/applications").send({ name: "Adnan Khan", age: 21, accountNumber: "1234567890" });
-  assert.equal(created.status, 201);
-  assert.match(created.body.shareToken, /^[a-f0-9]{48}$/);
-  assert.equal(created.body.shareUrl, `/application.html?token=${created.body.shareToken}`);
-  const shared = await request(app).get(`/api/shared-applications/${created.body.shareToken}`);
-  assert.equal(shared.status, 200);
-  assert.equal(shared.body.accountNumber, "1234567890");
-  const updated = await request(app).patch(`/api/shared-applications/${created.body.shareToken}`).send({ hireReason: "I learn quickly and build reliable software." });
-  assert.equal(updated.status, 200);
+test("profile API rejects a browser without a session", async () => {
+  const response = await request(buildTestApp()).get("/api/profile");
+  assert.equal(response.status, 401);
+  assert.equal(response.body.message, "Please log in to view this profile.");
 });
 
-test("rejects invalid input", async () => {
-  const result = await request(testApp()).post("/api/applications").send({ name: "A", age: 10, accountNumber: "12" });
-  assert.equal(result.status, 400);
+test("registration creates an HTTP-only session and only that browser can read the profile", async () => {
+  const app = buildTestApp();
+  const loggedInBrowser = request.agent(app);
+  const registration = await loggedInBrowser.post("/api/auth/register").send({
+    name: "Jordan Reed", age: 21, accountNumber: "12345678",
+    email: "jordan@example.test", password: "dummy-pass-123"
+  });
+  assert.equal(registration.status, 201);
+  assert.match(registration.headers["set-cookie"][0], /HttpOnly/i);
+  assert.match(registration.headers["set-cookie"][0], /SameSite=Lax/i);
+
+  const ownProfile = await loggedInBrowser.get("/api/profile");
+  assert.equal(ownProfile.status, 200);
+  assert.equal(ownProfile.body.name, "Jordan Reed");
+  assert.equal(ownProfile.body.accountNumber, "12345678");
+  assert.equal(Object.hasOwn(ownProfile.body, "passwordHash"), false);
+
+  const differentBrowser = await request(app).get("/api/profile");
+  assert.equal(differentBrowser.status, 401);
+
+  const saved = await loggedInBrowser.patch("/api/profile").send({
+    hireReason: "I learn quickly and communicate clearly.",
+    strongestSkills: "Problem solving and backend development.",
+    challengeSolved: "I diagnosed and fixed a deployment configuration issue."
+  });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.body.profile.strongestSkills, "Problem solving and backend development.");
+  assert.equal(saved.body.profile.challengeSolved, "I diagnosed and fixed a deployment configuration issue.");
 });

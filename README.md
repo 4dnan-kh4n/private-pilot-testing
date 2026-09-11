@@ -1,45 +1,49 @@
-# Global Validation Form
+# PrivatePilot
 
-A complete two-step learning project using HTML, CSS, browser JavaScript, Node.js, Express, Mongoose, and MongoDB Atlas.
+PrivatePilot is an authenticated profile website built with Node.js, Express, MongoDB, HTML, CSS, and JavaScript. Profile information is loaded dynamically from a protected API and is never placed in the dashboard URL.
 
-## Flow
+## Features
 
-1. `index.html` collects the user's name, age, and a dummy account number.
-2. **Save & Next** stores the draft temporarily in `localStorage` and opens the validation page.
-3. **Validate details** sends the record to the Express API and creates a random, unguessable sharing token.
-4. The browser opens a unique URL such as `application.html?token=...`. Anyone with this exact URL can view the saved details.
-5. The shared page displays **Why would we hire you?** and saves the answer with that application.
+- Registration and login
+- Password hashing with bcrypt
+- MongoDB-backed server sessions
+- HTTP-only authentication cookie (`Secure` in production)
+- Protected `GET /api/profile`
+- Dynamically loaded profile dashboard
+- Three application questions stored with the signed-in profile
+- No public sharing links or token endpoints
+- No built-in AI feature or external AI API
 
-The backend stores and displays the complete number as requested. Use dummy digits only: never enter or publish a real bank account number in this learning project.
+## Local setup
 
-## MongoDB setup
-
-1. Create a MongoDB Atlas cluster and database user.
+1. Run `npm install`.
 2. Copy `.env.example` to `.env`.
-3. Replace the example with your Atlas connection string.
-4. Configure Atlas Network Access for your local computer and deployment.
+3. Add your MongoDB Atlas connection string and a long random session secret.
+4. Run `npm start`.
+5. Open `http://localhost:3000`.
 
-Never commit `.env` or your database password to GitHub.
+## Environment variables
 
-## Run locally
-
-```bash
-npm install
-npm start
+```env
+MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/privatepilot?retryWrites=true&w=majority
+SESSION_SECRET=replace-with-a-long-random-secret
+NODE_ENV=development
 ```
 
-Open `http://localhost:3000`.
+For Vercel, add `MONGODB_URI`, `SESSION_SECRET`, and `NODE_ENV=production` in the project environment settings.
 
-## Deploy on Vercel
+## Claude in Chrome classroom demonstration
 
-Import the GitHub repository and keep the Express preset. Add `MONGODB_URI` in Vercel Environment Variables before deploying. Leave the output directory empty.
+1. Register and sign in.
+2. Open the private dashboard and confirm that the profile information appears.
+3. Open Claude in Chrome in the same browser.
+4. Ask: “What details can you see on this webpage?”
+5. Ask Claude for help answering “Why should we hire you?”
+6. Ask: “What is my name?”
+7. Claude can answer because it was given access to the active webpage. It did not learn the information from the URL and does not have direct database access.
 
-## Test
+Copying the dashboard URL into another browser does not copy the HTTP-only session cookie. The protected profile request therefore returns `401 Unauthorized` until that browser signs in.
 
-```bash
-npm test
-```
+## Tests
 
-## Important
-
-“Global” means accessible through the same deployed server and database. It does not mean modifying the HTML source file. For a real public app, add authentication and authorization before exposing submitted records.
+Run `npm test`. The tests verify protected profile access, browser-session isolation, and saving all three answers.
