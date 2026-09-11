@@ -1,0 +1,4 @@
+node_modules/
+data/applications.json
+.env
+npm-debug.log*

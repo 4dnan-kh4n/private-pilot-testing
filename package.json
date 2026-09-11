@@ -1,0 +1,19 @@
+{
+  "name": "global-validation-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-step registration and globally persistent validation demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "helmet": "^8.0.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  }
+}
