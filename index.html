@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form</title>
+</head>
+<body>
+    <h1>Registration Form</h1>
+    Name : <input type="text" id="name"><br><br>
+    Age: <input type="number" id="age"><br><br>
+    Bank Account Number: <input type="text" id="accNo"><br><br>
+    <button onclick="addDetails()">Submit</button>
+
+    <p id="details"></p><br><br>
+
+    Why would we hire you: <input type="text"><br><br>
+    <button>Validate</button>
+    <script>
+        function addDetails(){
+            let name = document.getElementById("name").value
+
+            let age = document.getElementById("age").value
+
+            let accDetails = document.getElementById("accNo").value
+
+            document.getElementById('details').textContent = `Name is : ${name}, age is: ${age}, Account Number is ${accDetails}`
+        }
+    </script>
+</body>
+</html>
