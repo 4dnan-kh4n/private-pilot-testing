@@ -1,6 +1,6 @@
-# PrivatePilot
+# Basic Registration Demo
 
-PrivatePilot is an authenticated profile website built with Node.js, Express, MongoDB, HTML, CSS, and JavaScript. Profile information is loaded dynamically from a protected API and is never placed in the dashboard URL.
+Basic Registration Demo is an authenticated profile website built with Node.js, Express, MongoDB, HTML, CSS, and JavaScript. Profile information is loaded dynamically from a protected API and is never placed in the dashboard URL.
 
 ## Features
 

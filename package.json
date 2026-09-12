@@ -1,8 +1,8 @@
 {
-  "name": "privatepilot-profile",
+  "name": "basic-registration-demo",
   "version": "1.0.0",
   "private": true,
-  "description": "Authenticated personal profile for browser-context testing",
+  "description": "Authenticated registration and profile website",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

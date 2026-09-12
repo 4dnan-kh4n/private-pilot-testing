@@ -10,7 +10,7 @@ document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", (
   document.querySelectorAll(".form-panel").forEach(panel => { panel.hidden = panel.dataset.panel !== tab.dataset.tab; });
 }));
 
-function wireAuthForm(selector, endpoint, fields) {
+function wireAuthForm(selector, endpoint, fields, onSuccess) {
   const form = document.querySelector(selector);
   if (!form) return;
   form.addEventListener("submit", async event => {
@@ -21,13 +21,21 @@ function wireAuthForm(selector, endpoint, fields) {
     message.textContent = ""; button.disabled = true; button.textContent = "Please wait…";
     try {
       const body = Object.fromEntries(fields.map(name => [name, form.elements[name].value]));
-      await api(endpoint, { method: "POST", body: JSON.stringify(body) });
+      const result = await api(endpoint, { method: "POST", body: JSON.stringify(body) });
+      if (onSuccess) return onSuccess(result, form);
       location.href = "/dashboard.html";
     } catch (error) { message.textContent = error.message; button.disabled = false; button.textContent = endpoint.endsWith("login") ? "Log in" : "Create profile"; }
   });
 }
 wireAuthForm("#loginForm", "/api/auth/login", ["email", "password"]);
-wireAuthForm("#registerForm", "/api/auth/register", ["name", "age", "accountNumber", "email", "password"]);
+wireAuthForm("#registerForm", "/api/auth/register", ["name", "age", "bankAccountNumber", "email", "password"], (result, form) => {
+  document.querySelector("#loginEmail").value = form.elements.email.value;
+  form.reset();
+  document.querySelector('[data-tab="login"]').click();
+  const message = document.querySelector("#loginForm .form-message");
+  message.textContent = result.message;
+  message.className = "form-message success";
+});
 
 const profileView = document.querySelector("#profileView");
 if (profileView) {
@@ -36,7 +44,7 @@ if (profileView) {
     document.querySelector("#loadingState").hidden = true; profileView.hidden = false;
     document.querySelector("#profileName").textContent = profile.name;
     document.querySelector("#profileAge").textContent = profile.age;
-    document.querySelector("#profileAccount").textContent = profile.accountNumber;
+    document.querySelector("#profileAccount").textContent = profile.bankAccountNumber;
     document.querySelector("#avatar").textContent = profile.name.charAt(0).toUpperCase();
     hireReason.value = profile.hireReason;
     document.querySelector("#strongestSkills").value = profile.strongestSkills;

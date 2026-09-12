@@ -22,21 +22,30 @@ test("profile API rejects a browser without a session", async () => {
   assert.equal(response.body.message, "Please log in to view this profile.");
 });
 
-test("registration creates an HTTP-only session and only that browser can read the profile", async () => {
+test("registration succeeds, login creates an HTTP-only session, and another browser is denied", async () => {
   const app = buildTestApp();
   const loggedInBrowser = request.agent(app);
   const registration = await loggedInBrowser.post("/api/auth/register").send({
-    name: "Jordan Reed", age: 21, accountNumber: "12345678",
+    name: "Jordan Reed", age: 21, bankAccountNumber: "12345678",
     email: "jordan@example.test", password: "dummy-pass-123"
   });
   assert.equal(registration.status, 201);
-  assert.match(registration.headers["set-cookie"][0], /HttpOnly/i);
-  assert.match(registration.headers["set-cookie"][0], /SameSite=Lax/i);
+  assert.equal(registration.body.message, "Registration successful. Please log in.");
+
+  const beforeLogin = await loggedInBrowser.get("/api/profile");
+  assert.equal(beforeLogin.status, 401);
+
+  const login = await loggedInBrowser.post("/api/auth/login").send({
+    email: "jordan@example.test", password: "dummy-pass-123"
+  });
+  assert.equal(login.status, 200);
+  assert.match(login.headers["set-cookie"][0], /HttpOnly/i);
+  assert.match(login.headers["set-cookie"][0], /SameSite=Lax/i);
 
   const ownProfile = await loggedInBrowser.get("/api/profile");
   assert.equal(ownProfile.status, 200);
   assert.equal(ownProfile.body.name, "Jordan Reed");
-  assert.equal(ownProfile.body.accountNumber, "12345678");
+  assert.equal(ownProfile.body.bankAccountNumber, "12345678");
   assert.equal(Object.hasOwn(ownProfile.body, "passwordHash"), false);
 
   const differentBrowser = await request(app).get("/api/profile");

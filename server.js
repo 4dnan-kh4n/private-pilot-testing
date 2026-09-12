@@ -12,7 +12,7 @@ function publicProfile(user) {
   return {
     name: user.name,
     age: user.age,
-    accountNumber: user.accountNumber,
+    bankAccountNumber: user.bankAccountNumber,
     hireReason: user.hireReason || "",
     strongestSkills: user.strongestSkills || "",
     challengeSolved: user.challengeSolved || ""
@@ -59,17 +59,16 @@ function createApp(dependencies = {}) {
       const password = String(req.body.password || "");
       const name = String(req.body.name || "").trim();
       const age = Number(req.body.age);
-      const accountNumber = String(req.body.accountNumber || "").replace(/[\s-]/g, "");
+      const bankAccountNumber = String(req.body.bankAccountNumber || "").replace(/[\s-]/g, "");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address." });
       if (password.length < 8 || password.length > 72) return res.status(400).json({ message: "Use a password containing 8–72 characters." });
       if (name.length < 2 || name.length > 80) return res.status(400).json({ message: "Enter a name containing 2–80 characters." });
       if (!Number.isInteger(age) || age < 16 || age > 100) return res.status(400).json({ message: "Enter an age between 16 and 100." });
-      if (!/^\d{6,18}$/.test(accountNumber)) return res.status(400).json({ message: "Enter an account number containing 6–18 digits." });
+      if (!/^\d{6,18}$/.test(bankAccountNumber)) return res.status(400).json({ message: "Enter a bank account number containing 6–18 digits." });
       if (await Model.exists({ email })) return res.status(409).json({ message: "That email is already registered." });
       const passwordHash = await bcrypt.hash(password, 12);
-      const user = await Model.create({ email, passwordHash, name, age, accountNumber });
-      req.session.userId = String(user._id);
-      req.session.save(error => error ? next(error) : res.status(201).json({ message: "Profile created." }));
+      await Model.create({ email, passwordHash, name, age, bankAccountNumber });
+      res.status(201).json({ message: "Registration successful. Please log in." });
     } catch (error) { next(error); }
   });
 
@@ -129,7 +128,7 @@ function createApp(dependencies = {}) {
 const app = createApp();
 if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
-  app.listen(port, () => console.log(`PrivatePilot running at http://localhost:${port}`));
+  app.listen(port, () => console.log(`Basic Registration Demo running at http://localhost:${port}`));
 }
 module.exports = app;
 module.exports.createApp = createApp;
